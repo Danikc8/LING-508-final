@@ -1,0 +1,20 @@
+from enum import Enum
+
+class PartOfSpeech(Enum):
+    ADJECTIVE = 'ADJ'
+    ADPOSITION = 'ADP'
+    ADVERB = 'ADV'
+    AUXILIARY = 'AUX'
+    COORDNATING_CONJUNTION = 'CCONJ'
+    DETERMINER = 'DET'
+    INTERJECTION = 'INTJ'
+    NOUN = 'NOUN'
+    NUMERAL = 'NUM'
+    PARTICLE = 'PART'
+    PRONOUN = 'PRON'
+    PROPER_NOUN = 'PROPN'
+    PUNCTUATION = 'PUNCT'
+    SUBORDINATING_CONJUNCTION = 'SCONJ'
+    SYMBOL = 'SYM'
+    VERB = 'VERB'
+    OTHER = 'X'
