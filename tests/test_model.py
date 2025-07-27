@@ -33,9 +33,38 @@ def test_character():
         phon_comp=pc,
         eng_tran="heart"
     )
-    character = Character(surface_form="心", lex_entry=entry)
+    character = Character(surface_form="心", lex_entries=[entry])
 
     assert character.surface_form == "心"
-    assert character.lex_entry.romanization == "sam1"
-    assert character.lex_entry.phon_comp.onset == "s"
-    assert character.lex_entry.eng_tran == "heart"
+    assert character.lex_entries[0].romanization == "sam1"
+    assert character.lex_entries[0].eng_tran == "heart"
+
+def test_character_with_multiple_lexical_entries():
+    pc1 = PhonologicalComponent(onset="s", nucleus="a", coda="m", tone="1")
+    entry1 = LexicalEntry(
+        pos=PartOfSpeech.NOUN,
+        romanization="sam1",
+        phon_comp=pc1,
+        eng_tran="heart"
+    )
+
+    pc2 = PhonologicalComponent(onset="s", nucleus="a", coda="m", tone="3")
+    entry2 = LexicalEntry(
+        pos=PartOfSpeech.VERB,
+        romanization="sam3",
+        phon_comp=pc2,
+        eng_tran="to keep in mind"
+    )
+
+    character = Character(surface_form="心", lex_entries=[entry1, entry2])
+
+    assert character.surface_form == "心"
+    assert len(character.lex_entries) == 2
+    assert character.lex_entries[0].romanization == "sam1"
+    assert character.lex_entries[0].phon_comp.tone == "1"
+    assert character.lex_entries[0].pos == PartOfSpeech.NOUN
+    assert character.lex_entries[0].eng_tran == "heart"
+    assert character.lex_entries[1].romanization == "sam3"
+    assert character.lex_entries[1].phon_comp.tone == "3"
+    assert character.lex_entries[1].pos == PartOfSpeech.VERB
+    assert character.lex_entries[1].eng_tran == "to keep in mind"
