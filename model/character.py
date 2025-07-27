@@ -4,6 +4,6 @@ class Character:
 
     def __init__(self,
                  surface_form: str,
-                 lex_entry: LexicalEntry):
+                 lex_entries: list[LexicalEntry]):
         self.surface_form = surface_form
-        self.lex_entry = lex_entry
+        self.lex_entries = lex_entries
