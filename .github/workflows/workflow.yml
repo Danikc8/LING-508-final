@@ -24,4 +24,4 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run Pytest tests
-        run: pytest
+        run: PYTHONPATH=$(pwd) pytest
