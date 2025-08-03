@@ -33,9 +33,9 @@ def test_character():
         phon_comp=pc,
         eng_tran="heart"
     )
-    character = Character(surface_form="心", lex_entries=[entry])
+    character = Character(character="心", lex_entries=[entry])
 
-    assert character.surface_form == "心"
+    assert character.character == "心"
     assert character.lex_entries[0].romanization == "sam1"
     assert character.lex_entries[0].eng_tran == "heart"
 
@@ -56,9 +56,9 @@ def test_character_with_multiple_lexical_entries():
         eng_tran="to keep in mind"
     )
 
-    character = Character(surface_form="心", lex_entries=[entry1, entry2])
+    character = Character(character="心", lex_entries=[entry1, entry2])
 
-    assert character.surface_form == "心"
+    assert character.character == "心"
     assert len(character.lex_entries) == 2
     assert character.lex_entries[0].romanization == "sam1"
     assert character.lex_entries[0].phon_comp.tone == "1"
