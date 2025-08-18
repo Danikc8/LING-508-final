@@ -10,6 +10,10 @@ import pycantonese
 from bs4 import BeautifulSoup
 import re
 
+hkcancor = pycantonese.hkcancor()
+all_words = hkcancor.words()
+ALL_CHARS = set(char for word in all_words for char in word)
+
 class Services:
 
     def __init__(self, char: str):
