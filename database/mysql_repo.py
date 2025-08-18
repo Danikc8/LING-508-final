@@ -57,15 +57,22 @@ class MysqlRepository(Repository):
                                      eng_tran=entry.get('eng_tran'))
         return lexical_entry
 
-    def load_lexicon(self) -> list[LexicalEntry]:
-        sql = 'SELECT * FROM lexicon'
-        self.cursor.execute(sql)
-        entries = [{'id': id,
+    def load_lexical_entries(self, char: str) -> list[LexicalEntry]:
+        sql = 'SELECT * FROM lexicon WHERE `character` = %s'
+        self.cursor.execute(sql, (char,))
+        entries = []
+        for (id, character, pos, romanization, onset, nucleus, coda, tone, eng_tran) in self.cursor:
+            entry = {'id': id,
                     'character': character,
                     'pos': pos,
                     'romanization': romanization,
-                    'phon_comp': phon_comp,
+                    'phon_comp': self.map_phonological_component({
+                        'onset': onset,
+                        'nucleus': nucleus,
+                        'coda': coda,
+                        'tone': tone,
+                    }),
                     'eng_tran': eng_tran
-                    } for (id, character, pos, romanization, phon_comp, eng_tran) in self.cursor]
-        lexicon = [self.mapper(entry) for entry in entries]
-        return lexicon
+                     }
+        entries.append(self.mapper(entry))
+        return entries
