@@ -1,28 +1,53 @@
+from typing import Union, Any
+
 import database.mysql_repo
+from model.character import Character
 from model.enumerations import PartOfSpeech
 from model.lexical_entry import LexicalEntry
 from model.phonological_components import PhonologicalComponent
+from gtts import gTTS
+import pycantonese
+from bs4 import BeautifulSoup
+import re
 
 class Services:
 
-    def __init__(self):
+    def __init__(self, char: str):
+        self.char = char
         self.repo = database.mysql_repo.MysqlRepository()
 
-    # Get all lexical entries for a given Chinese character
-    def get_lexical_entries(self, char: str) -> list[LexicalEntry]:
-        return self.repo.load_lexical_entries(char)
+    def pronounce(self, filename: str = None) -> str:
+        if not filename:
+            filename = f"{self.char}.mp3"
+        tts = gTTS(text=self.char, lang='zh-CN')
+        tts.save(filename)
+        return filename
 
-    # Return English translations for that character
-    def get_translations(self, char: str) -> list[str]:
-        entries = self.get_lexical_entries(char)
-        return [entry.eng_tran for entry in entries if entry.eng_tran]
+    def fetch(self) -> Union[Character, list[Any]]:
+        entries = self.repo.load_lexical_entries(self.char)
+        if entries:
+            print("Retrieved from DB")
+            return entries
 
-    # Return phonological breakdown(s) for that character
-    def get_phonological_components(self, char: str) -> list[PhonologicalComponent]:
-        entries = self.get_lexical_entries(char)
-        return [entry.phon_comp for entry in entries if entry.phon_comp]
+        print("Fetching from PyCantonese...")
+        corpus = pycantonese.parse_text(self.char)
+        lex_entries = []
 
-    # Return part-of-speech categories for that character
-    def get_parts_of_speech(self, char: str) -> list[PartOfSpeech]:
-        entries = self.get_lexical_entries(char)
-        return [entry.pos for entry in entries if entry.pos]
+        for utterance in corpus.utterances():
+            for token in utterance.tokens:
+                pos = next(
+                    (p for p in PartOfSpeech if p.value == token.pos),
+                    PartOfSpeech.OTHER
+                )
+                entry = LexicalEntry(
+                    pos=pos,
+                    romanization=token.word,
+                    phon_comp=PhonologicalComponent(
+                        onset=None, nucleus=None, coda=None, tone=None
+                    ),
+                    eng_tran=""  # fill from scraper later
+                )
+                lex_entries.append(entry)
+
+        self.repo.insert_lexicon(self.char, lex_entries)
+        return lex_entries

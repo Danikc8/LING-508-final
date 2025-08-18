@@ -74,5 +74,29 @@ class MysqlRepository(Repository):
                     }),
                     'eng_tran': eng_tran
                      }
-        entries.append(self.mapper(entry))
+            entries.append(self.mapper(entry))
         return entries
+
+    def insert_lexicon(self, char:str, entries: list[LexicalEntry]):
+        """
+        Insert a list of LexicalEntry objects into the lexicon table.
+        """
+        sql = """
+              INSERT INTO lexicon
+                  (`character`, pos, romanization, onset, nucleus, coda, tone, eng_tran)
+              VALUES (%s, %s, %s, %s, %s, %s, %s, %s) \
+              """
+
+        for entry in entries:
+            phon = entry.phon_comp
+            self.cursor.execute(sql, (
+                char,
+                entry.pos.value if hasattr(entry.pos, 'value') else entry.pos,
+                entry.romanization,
+                phon.onset if phon else None,
+                phon.nucleus if phon else None,
+                phon.coda if phon else None,
+                phon.tone if phon else None,
+                '; '.join(entry.eng_tran) if isinstance(entry.eng_tran, list) else entry.eng_tran
+            ))
+        self.connection.commit()

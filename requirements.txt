@@ -1,3 +1,9 @@
 pytest
 pytest-timeout
 mysql-connector
+beautifulsoup4
+Flask
+httpie
+flask-cors
+pycantonese
+gtts
