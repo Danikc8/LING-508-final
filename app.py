@@ -29,7 +29,7 @@ cors = CORS(app, resources={r"/parse": {"origins": "http://localhost:port"}})
 @app.route('/')
 def doc() -> str:
     app.logger.info("doc - Got request")
-    with open("app/doc.html", "r") as f:
+    with open("web/front.html", "r") as f:
         return f.read()
 
 
@@ -53,9 +53,9 @@ def search():
     data = request.get_json()
     app.logger.info(f"/search - Got request: {data}")
     services = Services(data.get('word'))
-    character = services.fetch()
+    entries = services.fetch()
     ret = [{
-        "form": character.character,
+        "form": e.form if hasattr(e, "form") else data.get("word"),  # use e.form if exists
         "pos": e.pos.name if hasattr(e.pos, "name") else str(e.pos),
         "romanization": e.romanization,
         "eng_tran": e.eng_tran,
@@ -65,7 +65,7 @@ def search():
             "coda": e.phon_comp.coda if e.phon_comp else None,
             "tone": e.phon_comp.tone if e.phon_comp else None
         } if e.phon_comp else None
-    } for e in character.lex_entries][:1]
+    } for e in entries]
 
     return jsonify(ret)
 
