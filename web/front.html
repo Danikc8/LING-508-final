@@ -67,24 +67,6 @@ async function handleSubmit(event) {
             </table>
             <br>`;
 
-        const btn = document.createElement('button');
-        btn.textContent = 'Play Pronunciation';
-        btn.addEventListener('click', async () => {
-            const audioResp = await fetch(`http://localhost:5000/pronounce`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({word: res.form})
-            });
-            const json = await audioResp.json();
-            if (json.audio_url) {
-                const audioEl = document.getElementById('audio');
-                audioEl.src = json.audio_url;
-                audioEl.play();
-            } else {
-                alert('Audio not available');
-            }
-        });
-
         div.appendChild(btn);
         resultsDiv.appendChild(div);
     });

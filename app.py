@@ -30,19 +30,6 @@ def doc() -> str:
     with open("web/front.html", "r") as f:
         return f.read()
 
-@app.route("/pronounce", methods=["POST"])
-@cross_origin(origin='localhost', headers=['Content-Type', 'Authorization'])
-def pronounce():
-    data = request.get_json()
-    app.logger.info(f"/pronounce - Got request: {data}")
-    services = Services(data.get('word'))
-    filepath = services.pronounce()
-
-    os.system(f'mpg123 "{filepath}"')
-    os.remove(filepath)
-
-    return jsonify({"msg": "success"})
-
 @app.route("/search", methods=["POST"])
 @cross_origin(origin='localhost', headers=['Content-Type', 'Authorization'])
 def search():

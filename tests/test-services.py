@@ -23,14 +23,3 @@ def test_fetch_has_pos_and_jyutping():
     entries = service.fetch()
     assert any(isinstance(e.pos, PartOfSpeech) for e in entries)
     assert any(isinstance(e.phon_comp, PhonologicalComponent) for e in entries if e.phon_comp)
-
-
-def test_pronounce_creates_file(tmp_path):
-    char = "白"
-    service = Services(char)
-
-    mp3_file = tmp_path / f"{char}.mp3"
-    filename = service.pronounce(str(mp3_file))
-
-    assert os.path.exists(filename)
-    assert filename.endswith(".mp3")

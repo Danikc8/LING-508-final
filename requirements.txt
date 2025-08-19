@@ -6,5 +6,4 @@ Flask
 httpie
 flask-cors
 pycantonese
-gtts
 requests

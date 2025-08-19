@@ -16,8 +16,6 @@ You can enter in a Chinese character using the Search interface and click submit
 "English Translation": "heart"
 ```
 
-There will also be a button for hearing the pronunciation of the word.
-
 The API can be called directly without the UI, using a POST request. The endpoint is http://localhost:5000/parse. The POST request must contain a JSON body with the "word" key, for example:
 
 ```
@@ -37,5 +35,3 @@ You should receive a success message like below:
 ```
 {"msg": "success"}
 ```
-
-The audio for the pronunciation will then play.
