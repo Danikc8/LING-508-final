@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Cantonese Dictionary</title>
+    <style>
+        table, th, td {
+            border: 1px solid black;
+            border-collapse: collapse;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
@@ -20,8 +27,6 @@
 
 <h2>Results:</h2>
 <pre id="results"></pre>
-
-<audio id="audio" controls></audio>
 
 <script>
 async function handleSubmit(event) {
@@ -45,7 +50,22 @@ async function handleSubmit(event) {
 
     results.forEach(res => {
         const div = document.createElement('div');
-        div.textContent = `Form: ${res.form}, POS: ${res.pos}, Romanization: ${res.romanization}, English: ${res.eng_tran}`;
+        div.innerHTML = `
+            <table style="width:100%">
+                <tr>
+                    <th>Form</th>
+                    <th>Part of Speech</th>
+                    <th>Jyutping</th>
+                    <th>English</th>
+                </tr>
+                <tr>
+                   <td>${res.form}</td>
+                   <td>${res.pos}</td>
+                   <td>${res.romanization}</td>
+                   <td>${res.eng_tran}</td>
+                </tr>
+            </table>
+            <br>`;
 
         const btn = document.createElement('button');
         btn.textContent = 'Play Pronunciation';

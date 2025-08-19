@@ -4,6 +4,9 @@ from model.enumerations import PartOfSpeech
 from model.phonological_components import PhonologicalComponent
 import mysql.connector
 import pycantonese as pc
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+from urllib.parse import quote
 
 class MysqlRepository(Repository):
 
@@ -69,69 +72,99 @@ class MysqlRepository(Repository):
                                      eng_tran=entry.get('eng_tran'))
         return lexical_entry
 
-    def load_lexical_entries(self, char: str) -> list[LexicalEntry]:
-        sql = 'SELECT * FROM lexicon WHERE `character` = %s'
-        self.cursor.execute(sql, (char,))
-        entries = []
+    def get_eng_translation(self, char: str) -> Optional[str]:
+        char_url = "https://cantonese.org/search.php?q=" + quote(char)
+        try:
+            html = urlopen(char_url)
+        except Exception as e:
+            print("\Error:", e)
+            return None
 
-        for (id, character, pos, romanization, onset, nucleus, coda, tone, eng_tran) in self.cursor:
-            phon = PhonologicalComponent(onset, nucleus, coda, tone)
-            entry = {
-                'pos': pos,
-                'romanization': romanization,
-                'phon_comp': phon,
-                'eng_tran': eng_tran
-            }
-            entries.append(self.mapper(entry))
-        return entries
+        soup = BeautifulSoup(html, 'html.parser')
 
-    def insert_lexicon(self):
+        eng_tran_list = []
+
+        for translation in soup.find('ol', attrs={'class': 'defnlist'}).children:
+            eng_tran_list.append(translation.text)
+
+        # Join the definitions with semicolons
+        return "; ".join(m.strip() for m in eng_tran_list[:3])
+
+    def insert_lexicon(self, char: str) -> None:
+        # Only using small sample size from PyCantonese
+        if char not in self.all_chars:
+            return
+
+        # Check if already in database
+        self.cursor.execute('SELECT 1 FROM lexicon WHERE `character` = %s LIMIT 1', (char,))
+        if self.cursor.fetchone():
+            return
+
         sql = """
               INSERT INTO lexicon
                   (`character`, pos, romanization, onset, nucleus, coda, tone, eng_tran)
               VALUES (%s, %s, %s, %s, %s, %s, %s, %s) \
               """
 
-        for char in self.all_chars:
-            corpus = pc.parse_text(char)
-            utterances = corpus.utterances()
-            entries = []
+        corpus = pc.parse_text(char)
+        entries_to_insert = []
 
-            for utt in utterances:
-                for token in utt.tokens:
-                    if token.word != char:
-                        continue
+        eng_tran = self.get_eng_translation(char)
 
-                    phon_comp = pc.parse_jyutping(token.jyutping)
-                    phon = phon_comp[0] if phon_comp else None
+        for utt in corpus.utterances():
+            for token in utt.tokens:
+                phon = self.map_phonological_component(token.jyutping)
 
-                    entry_dict = {
-                        'pos': token.pos,
-                        'romanization': token.jyutping,
-                        'phon_comp': {
-                            'onset': phon.onset if phon else None,
-                            'nucleus': phon.nucleus if phon else None,
-                            'coda': phon.coda if phon else None,
-                            'tone': phon.tone if phon else None,
-                        } if phon else None,
-                        'eng_tran': None  # No English translation in PyCantonese
-                    }
+                entry_dict = {
+                    'pos': token.pos,
+                    'romanization': token.jyutping,
+                    'phon_comp': phon,
+                    'eng_tran': eng_tran
+                }
 
-                    mapped_entry = self.mapper(entry_dict)
-                    entries.append(mapped_entry)
+                lexical_entry = self.mapper(entry_dict)
+                entries_to_insert.append(lexical_entry)
 
-            # Insert all entries for this character into MySQL
-            for entry in entries:
-                phon = entry.phon_comp
-                self.cursor.execute(sql, (
-                    char,
-                    entry.pos.value if hasattr(entry.pos, 'value') else entry.pos,
-                    entry.romanization,
-                    phon.onset if phon else None,
-                    phon.nucleus if phon else None,
-                    phon.coda if phon else None,
-                    phon.tone if phon else None,
-                    '; '.join(entry.eng_tran) if isinstance(entry.eng_tran, list) else entry.eng_tran
-                ))
+        # Insert into database
+        for entry in entries_to_insert:
+            phon = entry.phon_comp
+            self.cursor.execute(sql, (
+                char,
+                entry.pos.value if entry.pos else None,
+                entry.romanization if entry.romanization else None,
+                phon.onset if phon else None,
+                phon.nucleus if phon else None,
+                phon.coda if phon else None,
+                phon.tone if phon else None,
+                entry.eng_tran if entry.eng_tran else None,
+            ))
 
-            self.connection.commit()
+        self.connection.commit()
+
+    def load_lexical_entries(self, char: str) -> list[LexicalEntry]:
+        """
+        Load lexical entries for a character. If it doesn't exist in the database,
+        insert it first using insert_lexicon.
+        """
+        # Check if character exists
+        self.cursor.execute('SELECT * FROM lexicon WHERE `character` = %s', (char,))
+        rows = self.cursor.fetchall()
+
+        if not rows:
+            # Insert character on demand
+            self.insert_lexicon(char)
+            self.cursor.execute('SELECT * FROM lexicon WHERE `character` = %s', (char,))
+            rows = self.cursor.fetchall()
+
+        entries = []
+        for (id, character, pos, romanization, onset, nucleus, coda, tone, eng_tran) in rows:
+            phon = PhonologicalComponent(onset, nucleus, coda, tone)
+            entry_dict = {
+                'pos': pos,
+                'romanization': romanization,
+                'phon_comp': phon,
+                'eng_tran': eng_tran
+            }
+            entries.append(self.mapper(entry_dict))
+
+        return entries

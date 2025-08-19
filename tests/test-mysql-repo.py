@@ -52,29 +52,62 @@ def test_incomplete_phonological_comp_data():
     assert lex_entry_2.phon_comp.coda == ""
     assert lex_entry_2.phon_comp.tone == "4"
 
-
-def test_insert_lexicon():
+def test_insert_lexicon1():
     test_char = '白'
 
     # Clear any existing entries for this character
     repo.cursor.execute("DELETE FROM lexicon WHERE `character` = %s", (test_char,))
     repo.connection.commit()
 
-    # Insert the character using the new method
     repo.all_chars = {test_char}
-    repo.insert_lexicon()  # assumes insert_lexicon now uses self.all_chars internally
+    repo.insert_lexicon(test_char)
 
-    # Fetch back from DB
+    repo.cursor.execute(
+        "SELECT `character`, pos, romanization, onset, nucleus, coda, tone, eng_tran FROM lexicon WHERE `character` = %s",
+        (test_char,)
+    )
+    rows = repo.cursor.fetchall()
+
+    assert len(rows) > 0
+
+    for row in rows:
+        char, pos, romanization, onset, nucleus, coda, tone, eng_tran = row
+        assert char == test_char
+        assert pos is not None
+        assert romanization is not None
+        assert onset is not None
+        assert nucleus is not None
+        assert coda is not None
+        assert tone is not None
+        assert eng_tran is not None
+
+    print(f"Inserted {len(rows)} entries for character '{test_char}' successfully.")
+
+def test_insert_lexicon2():
+    test_char = '心'
+
+    repo.cursor.execute("DELETE FROM lexicon WHERE `character` = %s", (test_char,))
+    repo.connection.commit()
+
+    repo.all_chars = {test_char}
+    repo.insert_lexicon(test_char)
+
     repo.cursor.execute(
         "SELECT `character`, pos, romanization, onset, nucleus, coda, tone FROM lexicon WHERE `character` = %s",
         (test_char,)
     )
     rows = repo.cursor.fetchall()
 
-    # Assert that at least one entry was inserted
     assert len(rows) > 0
 
-    # Assert that the character in the row matches what we inserted
+    repo.cursor.execute(
+        "SELECT * FROM lexicon"
+    )
+    all_rows = repo.cursor.fetchall()
+    print("\nEntire lexicon table:")
+    for row in all_rows:
+        print(row)
+
     for row in rows:
         char, pos, romanization, onset, nucleus, coda, tone = row
         assert char == test_char
@@ -86,3 +119,18 @@ def test_insert_lexicon():
         assert tone is not None
 
     print(f"Inserted {len(rows)} entries for character '{test_char}' successfully.")
+
+def test_insert_non_existing_char():
+    non_char = 'A'
+
+    assert non_char not in repo.all_chars
+
+    repo.insert_lexicon(non_char)
+
+    repo.cursor.execute(
+        "SELECT `character` FROM lexicon WHERE `character` = %s",
+        (non_char,)
+    )
+    row = repo.cursor.fetchone()
+
+    assert row is None, f"Character '{non_char}' should not have been inserted into the database"
