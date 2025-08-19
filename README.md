@@ -18,6 +18,6 @@ Input: "心"
 
 Output:
 
-| **Form** | **Part of Speech** | **Jyutping Romanization** | **English Translation** | **Phonological Components** |
+| **Form** | **Part of Speech** | **Jyutping Romanization** | **Phonological Components** | **English Translation** |
 |--|--|--|--|--|
-| 心 | NOUN | sam1 | Heart           | onset: s, nnucleus: a, coda: m, tone: 1 | pronunciation button |
+| 心 | NOUN | sam1 | onset: s, nnucleus: a, coda: m, tone: 1 | Heart |
