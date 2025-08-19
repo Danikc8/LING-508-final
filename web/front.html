@@ -56,18 +56,19 @@ async function handleSubmit(event) {
                     <th>Form</th>
                     <th>Part of Speech</th>
                     <th>Jyutping</th>
+                    <th>Phonological Components</th>
                     <th>English</th>
                 </tr>
                 <tr>
                    <td>${res.form}</td>
                    <td>${res.pos}</td>
                    <td>${res.romanization}</td>
+                   <td>Onset: ${res.phon_comp.onset}, Nucleus: ${res.phon_comp.nucleus}, Coda: ${res.phon_comp.coda}, Tone: ${res.phon_comp.tone},</td>
                    <td>${res.eng_tran}</td>
                 </tr>
             </table>
             <br>`;
 
-        div.appendChild(btn);
         resultsDiv.appendChild(div);
     });
 }
